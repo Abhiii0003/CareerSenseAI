@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import UserRegistrationSerializer
+from .serializers import UserRegistrationSerializer, UserProfileSerializer
 
 
 @api_view(["POST"])
@@ -17,3 +17,11 @@ def register(request):
         )
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+def profile(request):
+    user = request.user
+    serializer = UserProfileSerializer(user)
+
+    return Response(serializer.data)

@@ -102,3 +102,27 @@ def upload_resume(request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST,
     )
+
+@api_view(["GET"])
+def resume_list(request):
+    if not request.user.is_authenticated:
+        return Response(
+            {"detail": "Authentication credentials were not provided."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    resumes = request.user.resumes.all().order_by("-uploaded_at")
+
+    data = []
+
+    for resume in resumes:
+        data.append(
+            {
+                "id": resume.id,
+                "file": resume.file.url,
+                "uploaded_at": resume.uploaded_at,
+                "extracted_text": resume.extracted_text,
+            }
+        )
+
+    return Response(data, status=status.HTTP_200_OK)

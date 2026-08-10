@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+from pypdf import PdfReader
+
 from .serializers import (
     UserRegistrationSerializer,
     UserProfileSerializer,
@@ -61,9 +63,38 @@ def upload_resume(request):
     serializer = ResumeSerializer(data=request.data)
 
     if serializer.is_valid():
-        serializer.save(user=request.user)
+        resume = serializer.save(user=request.user)
+
+        try:
+            reader = PdfReader(resume.file.path)
+
+            extracted_text = ""
+
+            for page in reader.pages:
+                page_text = page.extract_text()
+
+                if page_text:
+                    extracted_text += page_text + "\n"
+
+            resume.extracted_text = extracted_text.strip()
+            resume.save(update_fields=["extracted_text"])
+
+        except Exception as e:
+            return Response(
+                {
+                    "detail": "Resume uploaded, but text extraction failed.",
+                    "error": str(e),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         return Response(
-            serializer.data,
+            {
+                "id": resume.id,
+                "file": resume.file.url,
+                "uploaded_at": resume.uploaded_at,
+                "extracted_text": resume.extracted_text,
+            },
             status=status.HTTP_201_CREATED,
         )
 

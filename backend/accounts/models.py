@@ -19,6 +19,7 @@ class Resume(models.Model):
         related_name="resumes",
     )
     file = models.FileField(upload_to="resumes/")
+    extracted_text = models.TextField(blank=True, default="")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -2,7 +2,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import UserRegistrationSerializer, UserProfileSerializer
+from .serializers import (
+    UserRegistrationSerializer,
+    UserProfileSerializer,
+    ResumeSerializer,
+)
 
 
 @api_view(["POST"])
@@ -39,6 +43,29 @@ def profile(request):
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
+@api_view(["POST"])
+def upload_resume(request):
+    if not request.user.is_authenticated:
+        return Response(
+            {"detail": "Authentication credentials were not provided."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    serializer = ResumeSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save(user=request.user)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
 
     return Response(
         serializer.errors,

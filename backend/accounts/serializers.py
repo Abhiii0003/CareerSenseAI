@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+
+from .models import User, Resume
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -37,3 +38,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "branch",
             "graduation_year",
         ]
+
+
+class ResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume
+        fields = [
+            "id",
+            "file",
+            "uploaded_at",
+        ]
+        read_only_fields = ["id", "uploaded_at"]

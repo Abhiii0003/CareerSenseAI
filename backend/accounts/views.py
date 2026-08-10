@@ -16,12 +16,31 @@ def register(request):
             status=status.HTTP_201_CREATED,
         )
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST,
+    )
 
 
-@api_view(["GET"])
+@api_view(["GET", "PUT"])
 def profile(request):
     user = request.user
-    serializer = UserProfileSerializer(user)
 
-    return Response(serializer.data)
+    if request.method == "GET":
+        serializer = UserProfileSerializer(user)
+        return Response(serializer.data)
+
+    serializer = UserProfileSerializer(
+        user,
+        data=request.data,
+        partial=True,
+    )
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST,
+    )

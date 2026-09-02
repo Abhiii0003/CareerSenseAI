@@ -230,3 +230,116 @@ def resume_analysis(request, resume_id):
         },
         status=status.HTTP_200_OK,
     )
+
+@api_view(["GET"])
+def skill_gap_analysis(request, resume_id):
+    if not request.user.is_authenticated:
+        return Response(
+            {"detail": "Authentication credentials were not provided."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    try:
+        resume = request.user.resumes.get(id=resume_id)
+
+    except Resume.DoesNotExist:
+        return Response(
+            {"detail": "Resume not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    role = request.GET.get("role", "").strip().lower()
+
+    role_skills = {
+        "java-developer": [
+            "java",
+            "sql",
+            "git",
+            "spring boot",
+            "hibernate",
+            "rest api",
+            "junit",
+        ],
+        "python-developer": [
+            "python",
+            "sql",
+            "git",
+            "django",
+            "rest api",
+            "flask",
+            "pytest",
+        ],
+        "frontend-developer": [
+            "html",
+            "css",
+            "javascript",
+            "react",
+            "git",
+            "typescript",
+            "rest api",
+        ],
+        "data-analyst": [
+            "python",
+            "sql",
+            "excel",
+            "pandas",
+            "numpy",
+            "data visualization",
+            "power bi",
+        ],
+        "machine-learning-engineer": [
+            "python",
+            "sql",
+            "machine learning",
+            "deep learning",
+            "numpy",
+            "pandas",
+            "scikit-learn",
+        ],
+    }
+
+    role_names = {
+        "java-developer": "Java Developer",
+        "python-developer": "Python Developer",
+        "frontend-developer": "Frontend Developer",
+        "data-analyst": "Data Analyst",
+        "machine-learning-engineer": "Machine Learning Engineer",
+    }
+
+    if role not in role_skills:
+        return Response(
+            {
+                "detail": "Invalid role.",
+                "available_roles": list(role_names.keys()),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    resume_text = resume.extracted_text.lower()
+
+    matched_skills = []
+    missing_skills = []
+
+    for skill in role_skills[role]:
+        if skill in resume_text:
+            matched_skills.append(skill)
+        else:
+            missing_skills.append(skill)
+
+    total_skills = len(role_skills[role])
+    match_percentage = round(
+        (len(matched_skills) / total_skills) * 100
+    )
+
+    return Response(
+        {
+            "resume_id": resume.id,
+            "role": role_names[role],
+            "matched_skills": matched_skills,
+            "missing_skills": missing_skills,
+            "match_percentage": match_percentage,
+            "total_required_skills": total_skills,
+        },
+        status=status.HTTP_200_OK,
+    )
+

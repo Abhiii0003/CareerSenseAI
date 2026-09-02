@@ -6,6 +6,7 @@ from .views import (
     upload_resume,
     resume_list,
     resume_analysis,
+    skill_gap_analysis,
 )
 
 
@@ -38,5 +39,12 @@ urlpatterns = [
         "resume/<int:resume_id>/analysis/",
         resume_analysis,
         name="resume-analysis",
+    ),
+
+
+    path(
+        "resume/<int:resume_id>/skill-gap/",
+        skill_gap_analysis,
+        name="skill-gap-analysis",
     ),
 ]

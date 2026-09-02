@@ -18,6 +18,15 @@ function Dashboard({ onLogout }) {
 
   const [message, setMessage] = useState('')
 
+  // =========================================================
+  // SKILL GAP ANALYSIS
+  // =========================================================
+
+  const [targetRole, setTargetRole] = useState('java-developer')
+  const [skillGap, setSkillGap] = useState(null)
+  const [skillGapLoading, setSkillGapLoading] = useState(false)
+  const [skillGapMessage, setSkillGapMessage] = useState('')
+
   const token = localStorage.getItem('access_token')
 
   /* =========================================================
@@ -80,7 +89,7 @@ function Dashboard({ onLogout }) {
   }, [])
 
   /* =========================================================
-     ANALYSIS
+     RESUME ANALYSIS
   ========================================================= */
 
   const loadAnalysis = async (resumeId) => {
@@ -107,6 +116,61 @@ function Dashboard({ onLogout }) {
       console.error('Analysis error:', error)
     } finally {
       setAnalysisLoading(false)
+    }
+  }
+
+  /* =========================================================
+     SKILL GAP ANALYSIS
+  ========================================================= */
+
+  const handleSkillGapAnalysis = async () => {
+    if (!selectedResumeId) {
+      setSkillGap(null)
+      setSkillGapMessage(
+        'Upload a resume before running skill gap analysis.'
+      )
+      return
+    }
+
+    if (!token) {
+      setSkillGap(null)
+      setSkillGapMessage(
+        'Your session has expired. Please login again.'
+      )
+      return
+    }
+
+    setSkillGapLoading(true)
+    setSkillGapMessage('')
+    setSkillGap(null)
+
+    try {
+      const response = await fetch(
+        `${API}/resume/${selectedResumeId}/skill-gap/?role=${targetRole}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setSkillGapMessage(
+          data.detail || 'Unable to analyze skill gap.'
+        )
+        return
+      }
+
+      setSkillGap(data)
+    } catch (error) {
+      console.error('Skill gap error:', error)
+      setSkillGapMessage(
+        'Unable to connect to Django server.'
+      )
+    } finally {
+      setSkillGapLoading(false)
     }
   }
 
@@ -140,7 +204,9 @@ function Dashboard({ onLogout }) {
     }
 
     if (!token) {
-      setMessage('Your session has expired. Please login again.')
+      setMessage(
+        'Your session has expired. Please login again.'
+      )
       return
     }
 
@@ -166,7 +232,9 @@ function Dashboard({ onLogout }) {
       const data = await response.json()
 
       if (!response.ok) {
-        setMessage(data.detail || 'Resume upload failed.')
+        setMessage(
+          data.detail || 'Resume upload failed.'
+        )
         return
       }
 
@@ -178,16 +246,25 @@ function Dashboard({ onLogout }) {
 
       setResumes((previous) => [
         newResume,
-        ...previous.filter((resume) => resume.id !== data.id),
+        ...previous.filter(
+          (resume) => resume.id !== data.id
+        ),
       ])
 
       setSelectedResumeId(data.id)
       setSelectedFile(null)
-      setMessage('Resume analyzed successfully.')
+
+      setSkillGap(null)
+      setSkillGapMessage('')
+
+      setMessage(
+        'Resume analyzed successfully.'
+      )
 
       await loadAnalysis(data.id)
     } catch (error) {
       console.error('Upload error:', error)
+
       setMessage(
         'Unable to connect to Django server.'
       )
@@ -203,6 +280,8 @@ function Dashboard({ onLogout }) {
 
   const handleResumeSelect = (resumeId) => {
     setSelectedResumeId(resumeId)
+    setSkillGap(null)
+    setSkillGapMessage('')
     loadAnalysis(resumeId)
   }
 
@@ -322,13 +401,27 @@ function Dashboard({ onLogout }) {
             className="sidebar-link"
             onClick={() =>
               document
-                .getElementById('roadmap-section')
+                .getElementById('skill-gap-section')
                 ?.scrollIntoView({
                   behavior: 'smooth',
                 })
             }
           >
             <span>04</span>
+            Skill Gap
+          </button>
+
+          <button
+            className="sidebar-link"
+            onClick={() =>
+              document
+                .getElementById('roadmap-section')
+                ?.scrollIntoView({
+                  behavior: 'smooth',
+                })
+            }
+          >
+            <span>05</span>
             Career Roadmap
           </button>
 
@@ -392,6 +485,7 @@ function Dashboard({ onLogout }) {
 
             <div>
               <strong>{username}</strong>
+
               <span>
                 {profile?.branch || 'Career Profile'}
               </span>
@@ -417,11 +511,21 @@ function Dashboard({ onLogout }) {
 
             <div className="score-layout">
 
-              <div className="score-ring" style={{ '--score': score }}>
+              <div
+                className="score-ring"
+                style={{ '--score': score }}
+              >
 
                 <div className="score-ring-inner">
-                  <strong>{score}</strong>
-                  <span>/100</span>
+
+                  <strong>
+                    {score}
+                  </strong>
+
+                  <span>
+                    /100
+                  </span>
+
                 </div>
 
               </div>
@@ -437,8 +541,9 @@ function Dashboard({ onLogout }) {
                 </h2>
 
                 <p>
-                  Your resume intelligence score is calculated
-                  from the information detected in your resume.
+                  Your resume intelligence score is
+                  calculated from the information detected
+                  in your resume.
                 </p>
 
               </div>
@@ -464,10 +569,17 @@ function Dashboard({ onLogout }) {
             </p>
 
             <div className="stat-line">
-              <span>Profile intelligence</span>
+
+              <span>
+                Profile intelligence
+              </span>
+
               <strong>
-                {skillCount > 0 ? 'ACTIVE' : 'WAITING'}
+                {skillCount > 0
+                  ? 'ACTIVE'
+                  : 'WAITING'}
               </strong>
+
             </div>
 
           </div>
@@ -481,7 +593,9 @@ function Dashboard({ onLogout }) {
             </div>
 
             <div className="resume-status-icon">
-              {resumes.length > 0 ? '?' : '�'}
+              {resumes.length > 0
+                ? '✓'
+                : '—'}
             </div>
 
             <h3>
@@ -512,6 +626,7 @@ function Dashboard({ onLogout }) {
           <div className="section-top">
 
             <div>
+
               <span className="card-label">
                 RESUME INTELLIGENCE
               </span>
@@ -521,16 +636,21 @@ function Dashboard({ onLogout }) {
               </h2>
 
               <p>
-                Upload your latest resume and let CareerSense AI
-                extract the skills and signals that matter.
+                Upload your latest resume and let
+                CareerSense AI extract the skills and
+                signals that matter.
               </p>
+
             </div>
 
             <div className="analysis-indicator">
+
               <span></span>
+
               {analysisLoading
                 ? 'PROCESSING'
                 : 'AI READY'}
+
             </div>
 
           </div>
@@ -538,7 +658,7 @@ function Dashboard({ onLogout }) {
           <div className="upload-area">
 
             <div className="upload-icon">
-              ?
+              ↑
             </div>
 
             <div className="upload-copy">
@@ -550,7 +670,7 @@ function Dashboard({ onLogout }) {
               </h3>
 
               <p>
-                PDF files only � AI-powered analysis
+                PDF files only · AI-powered analysis
               </p>
 
             </div>
@@ -572,11 +692,14 @@ function Dashboard({ onLogout }) {
             <button
               className="analyze-btn"
               onClick={handleUpload}
-              disabled={uploading || !selectedFile}
+              disabled={
+                uploading ||
+                !selectedFile
+              }
             >
               {uploading
                 ? 'Analyzing...'
-                : 'Analyze Resume ?'}
+                : 'Analyze Resume →'}
             </button>
 
           </div>
@@ -588,9 +711,11 @@ function Dashboard({ onLogout }) {
           )}
 
           {selectedResume && (
+
             <div className="current-resume">
 
               <div>
+
                 <span>
                   ACTIVE RESUME
                 </span>
@@ -598,6 +723,7 @@ function Dashboard({ onLogout }) {
                 <strong>
                   {resumeName}
                 </strong>
+
               </div>
 
               <span>
@@ -607,6 +733,7 @@ function Dashboard({ onLogout }) {
               </span>
 
             </div>
+
           )}
 
         </section>
@@ -623,6 +750,7 @@ function Dashboard({ onLogout }) {
           <div className="section-top">
 
             <div>
+
               <span className="card-label">
                 SKILL INTELLIGENCE
               </span>
@@ -630,6 +758,7 @@ function Dashboard({ onLogout }) {
               <h2>
                 What your resume tells us.
               </h2>
+
             </div>
 
             <span className="skill-count">
@@ -643,10 +772,12 @@ function Dashboard({ onLogout }) {
             <div className="skill-cloud">
 
               {skills.map((skill, index) => (
+
                 <div
                   className="skill-pill"
                   key={`${skill}-${index}`}
                 >
+
                   <span className="skill-index">
                     {String(index + 1).padStart(2, '0')}
                   </span>
@@ -658,7 +789,9 @@ function Dashboard({ onLogout }) {
                   <span className="skill-active">
                     ACTIVE
                   </span>
+
                 </div>
+
               ))}
 
             </div>
@@ -666,7 +799,293 @@ function Dashboard({ onLogout }) {
           ) : (
 
             <div className="empty-state">
-              Upload a resume to discover your technical skills.
+              Upload a resume to discover your
+              technical skills.
+            </div>
+
+          )}
+
+        </section>
+
+        {/* ===================================================
+            SKILL GAP ANALYSIS
+        =================================================== */}
+
+        <section
+          id="skill-gap-section"
+          className="dashboard-card skill-gap-panel"
+        >
+
+          <div className="section-top">
+
+            <div>
+
+              <span className="card-label">
+                TARGET ROLE INTELLIGENCE
+              </span>
+
+              <h2>
+                Find your skill gap.
+              </h2>
+
+              <p>
+                Select a target placement role and compare
+                its required skills with your current resume.
+              </p>
+
+            </div>
+
+            <div className="analysis-indicator">
+
+              <span></span>
+
+              {skillGapLoading
+                ? 'ANALYZING'
+                : 'ROLE READY'}
+
+            </div>
+
+          </div>
+
+          <div className="skill-gap-controls">
+
+            <div className="role-selector-wrap">
+
+              <label htmlFor="target-role">
+                TARGET ROLE
+              </label>
+
+              <select
+                id="target-role"
+                value={targetRole}
+                onChange={(event) => {
+                  setTargetRole(event.target.value)
+                  setSkillGap(null)
+                  setSkillGapMessage('')
+                }}
+                disabled={skillGapLoading}
+              >
+
+                <option value="java-developer">
+                  Java Developer
+                </option>
+
+                <option value="python-developer">
+                  Python Developer
+                </option>
+
+                <option value="frontend-developer">
+                  Frontend Developer
+                </option>
+
+                <option value="data-analyst">
+                  Data Analyst
+                </option>
+
+                <option value="machine-learning-engineer">
+                  Machine Learning Engineer
+                </option>
+
+              </select>
+
+            </div>
+
+            <button
+              className="skill-gap-btn"
+              onClick={handleSkillGapAnalysis}
+              disabled={
+                skillGapLoading ||
+                !selectedResumeId
+              }
+            >
+
+              {skillGapLoading
+                ? 'Analyzing Skill Gap...'
+                : 'Analyze Skill Gap →'}
+
+            </button>
+
+          </div>
+
+          {skillGapMessage && (
+
+            <div className="dashboard-message">
+              {skillGapMessage}
+            </div>
+
+          )}
+
+          {skillGap && (
+
+            <div className="skill-gap-result">
+
+              {/* MATCH SUMMARY */}
+
+              <div className="skill-gap-summary">
+
+                <div className="skill-gap-match">
+
+                  <span>
+                    ROLE MATCH
+                  </span>
+
+                  <strong>
+                    {skillGap.match_percentage}%
+                  </strong>
+
+                  <small>
+                    {skillGap.role}
+                  </small>
+
+                </div>
+
+                <div className="skill-gap-progress">
+
+                  <div className="skill-gap-progress-top">
+
+                    <span>
+                      Career alignment
+                    </span>
+
+                    <strong>
+                      {skillGap.match_percentage}%
+                    </strong>
+
+                  </div>
+
+                  <div className="skill-gap-progress-track">
+
+                    <div
+                      className="skill-gap-progress-fill"
+                      style={{
+                        width: `${skillGap.match_percentage}%`,
+                      }}
+                    ></div>
+
+                  </div>
+
+                  <p>
+                    {skillGap.matched_skills.length} of{' '}
+                    {skillGap.total_required_skills}{' '}
+                    required skills detected.
+                  </p>
+
+                </div>
+
+              </div>
+
+              {/* MATCHED + MISSING */}
+
+              <div className="skill-gap-columns">
+
+                {/* MATCHED */}
+
+                <div className="skill-gap-column matched">
+
+                  <div className="skill-gap-column-head">
+
+                    <span>
+                      MATCHED SKILLS
+                    </span>
+
+                    <strong>
+                      {skillGap.matched_skills.length}
+                    </strong>
+
+                  </div>
+
+                  {skillGap.matched_skills.length > 0 ? (
+
+                    <div className="skill-gap-list">
+
+                      {skillGap.matched_skills.map(
+                        (skill, index) => (
+
+                          <div
+                            className="skill-gap-item"
+                            key={`${skill}-${index}`}
+                          >
+
+                            <span className="skill-gap-check">
+                              ✓
+                            </span>
+
+                            <span>
+                              {skill}
+                            </span>
+
+                          </div>
+
+                        )
+                      )}
+
+                    </div>
+
+                  ) : (
+
+                    <div className="skill-gap-empty">
+                      No required skills detected yet.
+                    </div>
+
+                  )}
+
+                </div>
+
+                {/* MISSING */}
+
+                <div className="skill-gap-column missing">
+
+                  <div className="skill-gap-column-head">
+
+                    <span>
+                      SKILLS TO BUILD
+                    </span>
+
+                    <strong>
+                      {skillGap.missing_skills.length}
+                    </strong>
+
+                  </div>
+
+                  {skillGap.missing_skills.length > 0 ? (
+
+                    <div className="skill-gap-list">
+
+                      {skillGap.missing_skills.map(
+                        (skill, index) => (
+
+                          <div
+                            className="skill-gap-item"
+                            key={`${skill}-${index}`}
+                          >
+
+                            <span className="skill-gap-arrow">
+                              +
+                            </span>
+
+                            <span>
+                              {skill}
+                            </span>
+
+                          </div>
+
+                        )
+                      )}
+
+                    </div>
+
+                  ) : (
+
+                    <div className="skill-gap-empty">
+                      Excellent. No skill gaps detected.
+                    </div>
+
+                  )}
+
+                </div>
+
+              </div>
+
             </div>
 
           )}
@@ -682,6 +1101,7 @@ function Dashboard({ onLogout }) {
           <div className="section-top">
 
             <div>
+
               <span className="card-label">
                 RESUME HISTORY
               </span>
@@ -689,6 +1109,7 @@ function Dashboard({ onLogout }) {
               <h2>
                 Your career documents.
               </h2>
+
             </div>
 
             <span className="history-count">
@@ -717,6 +1138,7 @@ function Dashboard({ onLogout }) {
                   resume.id === selectedResumeId
 
                 return (
+
                   <button
                     className={`resume-row ${
                       isActive ? 'selected' : ''
@@ -748,12 +1170,15 @@ function Dashboard({ onLogout }) {
                     </div>
 
                     <div className="resume-action">
+
                       {isActive
                         ? 'VIEWING'
-                        : 'ANALYZE ?'}
+                        : 'ANALYZE →'}
+
                     </div>
 
                   </button>
+
                 )
               })}
 
@@ -762,7 +1187,8 @@ function Dashboard({ onLogout }) {
           ) : (
 
             <div className="empty-state">
-              No resumes uploaded yet. Upload your first resume above.
+              No resumes uploaded yet. Upload your
+              first resume above.
             </div>
 
           )}
@@ -781,6 +1207,7 @@ function Dashboard({ onLogout }) {
           <div className="section-top">
 
             <div>
+
               <span className="card-label">
                 CAREER ROADMAP
               </span>
@@ -790,13 +1217,18 @@ function Dashboard({ onLogout }) {
               </h2>
 
               <p>
-                Use your current profile as the starting point
-                for your career growth.
+                Use your current profile as the starting
+                point for your career growth.
               </p>
+
             </div>
 
             <div className="roadmap-score">
-              {score > 0 ? `${score}% READY` : 'BUILD PROFILE'}
+
+              {score > 0
+                ? `${score}% READY`
+                : 'BUILD PROFILE'}
+
             </div>
 
           </div>
@@ -810,6 +1242,7 @@ function Dashboard({ onLogout }) {
               </div>
 
               <div>
+
                 <span>
                   CURRENT
                 </span>
@@ -819,9 +1252,10 @@ function Dashboard({ onLogout }) {
                 </h3>
 
                 <p>
-                  Resume data and technical skills have been
-                  processed by the platform.
+                  Resume data and technical skills have
+                  been processed by the platform.
                 </p>
+
               </div>
 
             </div>
@@ -835,6 +1269,7 @@ function Dashboard({ onLogout }) {
               </div>
 
               <div>
+
                 <span>
                   NEXT
                 </span>
@@ -844,9 +1279,10 @@ function Dashboard({ onLogout }) {
                 </h3>
 
                 <p>
-                  Identify the skills required to become stronger
-                  for your target placement role.
+                  Identify the skills required to become
+                  stronger for your target placement role.
                 </p>
+
               </div>
 
             </div>
@@ -860,6 +1296,7 @@ function Dashboard({ onLogout }) {
               </div>
 
               <div>
+
                 <span>
                   TARGET
                 </span>
@@ -869,8 +1306,8 @@ function Dashboard({ onLogout }) {
                 </h3>
 
                 <p>
-                  Build the knowledge and confidence required
-                  for your desired career path.
+                  Build the knowledge and confidence
+                  required for your desired career path.
                 </p>
 
               </div>
@@ -888,4 +1325,3 @@ function Dashboard({ onLogout }) {
 }
 
 export default Dashboard
-

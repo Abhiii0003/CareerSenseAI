@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import './Login.css'
-import Dashboard from './Dashboard'
 
-function Login() {
+function Login({ onLogin, onBackHome }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [loggedIn, setLoggedIn] = useState(false)
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -30,8 +28,8 @@ function Login() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            username: username,
-            password: password,
+            username,
+            password,
           }),
         }
       )
@@ -46,8 +44,8 @@ function Login() {
       localStorage.setItem('access_token', data.access)
       localStorage.setItem('refresh_token', data.refresh)
 
-      setLoggedIn(true)
-
+      // App.jsx ko batayega ki login successful hai
+      onLogin()
     } catch (error) {
       console.error(error)
 
@@ -59,22 +57,31 @@ function Login() {
     }
   }
 
-  if (loggedIn) {
-    return <Dashboard />
-  }
-
   return (
     <div className="login-page">
       <div className="login-card">
 
+        <button
+          type="button"
+          className="login-back"
+          onClick={onBackHome}
+        >
+          ← Back to Home
+        </button>
+
         <div className="login-brand">
-          Career<span>Sense</span>AI
+          Career<span>Sense</span> AI
+        </div>
+
+        <div className="login-status">
+          <span className="status-dot"></span>
+          AI Career Intelligence Platform
         </div>
 
         <h1>Welcome back</h1>
 
         <p className="login-subtitle">
-          Login to continue your career journey.
+          Sign in to continue your personalized career journey.
         </p>
 
         <form onSubmit={handleLogin}>
@@ -89,9 +96,8 @@ function Login() {
               type="text"
               placeholder="Enter your username"
               value={username}
-              onChange={(event) =>
-                setUsername(event.target.value)
-              }
+              onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
             />
           </div>
 
@@ -105,23 +111,15 @@ function Login() {
               type="password"
               placeholder="Enter your password"
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
             />
           </div>
 
           {error && (
-            <p
-              style={{
-                color: '#dc2626',
-                fontSize: '14px',
-                marginBottom: '15px',
-                textAlign: 'center',
-              }}
-            >
+            <div className="login-error">
               {error}
-            </p>
+            </div>
           )}
 
           <button
@@ -129,7 +127,7 @@ function Login() {
             className="login-submit"
             disabled={loading}
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Authenticating...' : 'Login to CareerSense AI'}
           </button>
 
         </form>
@@ -137,6 +135,12 @@ function Login() {
         <p className="register-text">
           Don't have an account? <span>Register</span>
         </p>
+
+        <div className="login-footer">
+          <span>SECURE JWT AUTHENTICATION</span>
+          <span>•</span>
+          <span>CAREER INTELLIGENCE</span>
+        </div>
 
       </div>
     </div>

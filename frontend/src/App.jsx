@@ -1,73 +1,116 @@
-import { useState } from 'react'
-import './App.css'
+﻿import { useState } from 'react'
+import Dashboard from './Dashboard'
 import Login from './Login'
+import './App.css'
 
 function App() {
-  const [showLogin, setShowLogin] = useState(false)
+  // Always start from Home page
+  const [page, setPage] = useState('home')
 
-  // Login page show karna
-  if (showLogin) {
-    return <Login />
+  const handleLogin = () => {
+    setPage('dashboard')
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    setPage('home')
+  }
+
+  if (page === 'login') {
+    return (
+      <Login
+        onLogin={handleLogin}
+        onBackHome={() => setPage('home')}
+      />
+    )
+  }
+
+  if (page === 'dashboard') {
+    return (
+      <Dashboard
+        onLogout={handleLogout}
+      />
+    )
   }
 
   return (
     <div className="app">
 
-      {/* NAVBAR */}
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
+
       <nav className="navbar">
+
         <div className="logo">
-          Career<span>Sense</span>AI
+          Career<span>Sense</span> AI
         </div>
 
         <div className="nav-links">
-          <a href="#features">Features</a>
-          <a href="#how-it-works">How It Works</a>
+
+          <a href="#features">
+            Features
+          </a>
+
+          <a href="#how-it-works">
+            How It Works
+          </a>
 
           <button
             className="login-btn"
-            onClick={() => setShowLogin(true)}
+            onClick={() => setPage('login')}
           >
             Login
           </button>
 
           <button
             className="signup-btn"
-            onClick={() => setShowLogin(true)}
+            onClick={() => setPage('login')}
           >
             Get Started
           </button>
+
         </div>
+
       </nav>
 
-      {/* HERO */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
+
       <main>
+
+        {/* ===================================================
+            HERO
+        =================================================== */}
 
         <section className="hero-section">
 
           <div className="hero-content">
 
             <div className="badge">
-              AI-Powered Career Assistant
+              AI-POWERED CAREER INTELLIGENCE
             </div>
 
             <h1>
-              Turn Your Resume Into Your
-              <span> Career Roadmap.</span>
+              Build the career
+              <span>you are meant for.</span>
             </h1>
 
             <p>
-              Upload your resume and let CareerSenseAI analyze your
-              skills, identify gaps, and help you discover the career
-              path that fits you best.
+              CareerSense AI analyzes your resume, identifies your
+              skill gaps, and helps you prepare for the roles you
+              actually want.
             </p>
 
             <div className="hero-buttons">
 
               <button
                 className="primary-btn"
-                onClick={() => setShowLogin(true)}
+                onClick={() => setPage('login')}
               >
-                Analyze My Resume →
+                Start Your Journey →
               </button>
 
               <button
@@ -75,24 +118,34 @@ function App() {
                 onClick={() =>
                   document
                     .getElementById('features')
-                    ?.scrollIntoView({ behavior: 'smooth' })
+                    ?.scrollIntoView({
+                      behavior: 'smooth',
+                    })
                 }
               >
-                Explore Features
+                Explore Platform
               </button>
 
             </div>
 
           </div>
 
-          {/* RESUME ANALYSIS CARD */}
+          {/* =================================================
+              HERO AI CARD
+          ================================================= */}
+
           <div className="hero-card">
 
             <div className="card-header">
 
               <div>
-                <small>Resume Analysis</small>
-                <h3>Career Readiness</h3>
+                <small>
+                  RESUME INTELLIGENCE
+                </small>
+
+                <h3>
+                  AI Analysis Complete
+                </h3>
               </div>
 
               <div className="score">
@@ -102,60 +155,72 @@ function App() {
             </div>
 
             <div className="progress">
-              <div className="progress-bar"></div>
+              <div className="progress-bar" />
             </div>
 
             <div className="skills">
 
               <div className="skill">
-                <span>Python</span>
-                <b>Strong</b>
+                <span>Java</span>
+                <b>92%</b>
               </div>
 
               <div className="skill">
-                <span>Django</span>
-                <b>Good</b>
+                <span>JavaScript</span>
+                <b>86%</b>
               </div>
 
               <div className="skill">
-                <span>React</span>
-                <b>Improve</b>
+                <span>SQL</span>
+                <b>81%</b>
               </div>
 
               <div className="skill">
-                <span>Data Structures</span>
-                <b>Good</b>
+                <span>AI / ML</span>
+                <b>74%</b>
               </div>
 
             </div>
 
             <div className="recommendation">
-              <strong>AI Recommendation</strong>
-              <p>Improve React &amp; SQL skills</p>
+
+              <strong>
+                AI RECOMMENDATION
+              </strong>
+
+              <p>
+                Strengthen Machine Learning & Backend skills
+                to improve your target-role match.
+              </p>
+
             </div>
 
           </div>
 
         </section>
 
-        {/* FEATURES */}
+        {/* ===================================================
+            FEATURES
+        =================================================== */}
+
         <section
-          className="features-section"
           id="features"
+          className="features-section"
         >
 
           <div className="section-heading">
 
-            <span>WHY CAREERSENSEAI</span>
+            <span>
+              CORE INTELLIGENCE
+            </span>
 
             <h2>
-              Everything you need to move
-              your career forward.
+              Everything you need for placement preparation.
             </h2>
 
             <p>
-              CareerSenseAI combines your resume data with AI-powered
-              analysis to give you practical career guidance.
+              One intelligent platform for resume analysis,
+              skill discovery and career preparation.
             </p>
 
           </div>
@@ -165,16 +230,16 @@ function App() {
             <div className="feature-card">
 
               <div className="feature-icon">
-                📄
+                ✦
               </div>
 
               <h3>
-                Resume Analysis
+                Resume Intelligence
               </h3>
 
               <p>
-                Upload your resume and automatically extract important
-                information about your education, experience and skills.
+                Analyze your resume and understand your
+                strengths, weaknesses and ATS readiness.
               </p>
 
             </div>
@@ -182,16 +247,16 @@ function App() {
             <div className="feature-card">
 
               <div className="feature-icon">
-                🧠
+                ⌁
               </div>
 
               <h3>
-                Skill Gap Detection
+                Skill Gap Analysis
               </h3>
 
               <p>
-                Discover which skills you already have and which skills
-                you should develop for your target career.
+                Discover which skills you need to become
+                stronger for your target role.
               </p>
 
             </div>
@@ -199,16 +264,16 @@ function App() {
             <div className="feature-card">
 
               <div className="feature-icon">
-                🚀
+                ◈
               </div>
 
               <h3>
-                Career Recommendations
+                Career Roadmap
               </h3>
 
               <p>
-                Get personalized career suggestions based on your
-                profile, skills and resume.
+                Follow an AI-assisted roadmap from your
+                current skills to your desired career.
               </p>
 
             </div>
@@ -217,18 +282,23 @@ function App() {
 
         </section>
 
-        {/* HOW IT WORKS */}
+        {/* ===================================================
+            HOW IT WORKS
+        =================================================== */}
+
         <section
-          className="steps-section"
           id="how-it-works"
+          className="steps-section"
         >
 
           <div className="section-heading">
 
-            <span>HOW IT WORKS</span>
+            <span>
+              HOW IT WORKS
+            </span>
 
             <h2>
-              Your career journey starts in three steps.
+              From resume to career direction.
             </h2>
 
           </div>
@@ -238,7 +308,7 @@ function App() {
             <div className="step">
 
               <div className="step-number">
-                01 — UPLOAD
+                01 / UPLOAD
               </div>
 
               <h3>
@@ -246,7 +316,8 @@ function App() {
               </h3>
 
               <p>
-                Upload your existing resume securely to CareerSenseAI.
+                Give CareerSense AI your existing resume and
+                let the intelligence engine process it.
               </p>
 
             </div>
@@ -254,16 +325,16 @@ function App() {
             <div className="step">
 
               <div className="step-number">
-                02 — ANALYZE
+                02 / ANALYZE
               </div>
 
               <h3>
-                Let AI analyze it
+                Understand your profile
               </h3>
 
               <p>
-                Our system extracts your resume information and
-                analyzes your skills and experience.
+                Your skills, resume score and career signals
+                are analyzed to create your profile.
               </p>
 
             </div>
@@ -271,7 +342,7 @@ function App() {
             <div className="step">
 
               <div className="step-number">
-                03 — IMPROVE
+                03 / IMPROVE
               </div>
 
               <h3>
@@ -279,8 +350,8 @@ function App() {
               </h3>
 
               <p>
-                Follow personalized recommendations to improve your
-                skills and reach your career goals.
+                Identify gaps and work towards the skills
+                required for your target role.
               </p>
 
             </div>
@@ -291,15 +362,18 @@ function App() {
 
       </main>
 
-      {/* FOOTER */}
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
       <footer>
 
-        <div className="logo">
-          Career<span>Sense</span>AI
-        </div>
+        <p>
+          © 2026 CareerSense AI — Career Intelligence Platform
+        </p>
 
         <p>
-          © 2026 CareerSenseAI. Built for smarter careers.
+          AI-powered placement preparation
         </p>
 
       </footer>

@@ -4,6 +4,8 @@ from rest_framework import status
 
 from pypdf import PdfReader
 
+from .models import Resume
+
 from .serializers import (
     UserRegistrationSerializer,
     UserProfileSerializer,
@@ -17,6 +19,7 @@ def register(request):
 
     if serializer.is_valid():
         serializer.save()
+
         return Response(
             {"message": "User registered successfully"},
             status=status.HTTP_201_CREATED,
@@ -103,6 +106,7 @@ def upload_resume(request):
         status=status.HTTP_400_BAD_REQUEST,
     )
 
+
 @api_view(["GET"])
 def resume_list(request):
     if not request.user.is_authenticated:
@@ -125,4 +129,104 @@ def resume_list(request):
             }
         )
 
-    return Response(data, status=status.HTTP_200_OK)
+    return Response(
+        data,
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+def resume_analysis(request, resume_id):
+    if not request.user.is_authenticated:
+        return Response(
+            {"detail": "Authentication credentials were not provided."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    try:
+        resume = request.user.resumes.get(id=resume_id)
+
+    except Resume.DoesNotExist:
+        return Response(
+            {"detail": "Resume not found."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    text = resume.extracted_text.lower()
+
+    skill_keywords = [
+        "python",
+        "java",
+        "javascript",
+        "react",
+        "django",
+        "html",
+        "css",
+        "sql",
+        "mysql",
+        "postgresql",
+        "mongodb",
+        "git",
+        "github",
+        "machine learning",
+        "deep learning",
+        "data science",
+        "c",
+        "c++",
+        "android",
+        "flutter",
+        "aws",
+        "docker",
+    ]
+
+    found_skills = []
+
+    for skill in skill_keywords:
+        if skill in text:
+            found_skills.append(skill)
+
+    score = 0
+
+    # Resume content
+    if len(text) >= 300:
+        score += 20
+
+    if len(text) >= 800:
+        score += 10
+
+    # Resume sections
+    sections = [
+        "education",
+        "experience",
+        "skills",
+        "projects",
+        "certifications",
+    ]
+
+    for section in sections:
+        if section in text:
+            score += 8
+
+    # Skills
+    skill_score = min(len(found_skills) * 4, 30)
+    score += skill_score
+
+    # Contact information
+    if "@" in text:
+        score += 5
+
+    if any(char.isdigit() for char in text):
+        score += 5
+
+    score = min(score, 100)
+
+    return Response(
+        {
+            "resume_id": resume.id,
+            "score": score,
+            "skills": found_skills,
+            "skill_count": len(found_skills),
+            "text_length": len(text),
+        },
+        status=status.HTTP_200_OK,
+    )
